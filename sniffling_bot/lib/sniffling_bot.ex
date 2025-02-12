@@ -1,18 +1,39 @@
 defmodule SnifflingBot do
-  @moduledoc """
-  Documentation for `SnifflingBot`.
-  """
+  use Supervisor
 
-  @doc """
-  Hello world.
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
+  end
 
-  ## Examples
+  @impl true
+  def init(_init_arg) do
+    children = [SnifflingBot.Consumer]
 
-      iex> SnifflingBot.hello()
-      :world
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+end
 
-  """
-  def hello do
-    :world
+defmodule SnifflingBot.Consumer do
+  use Nostrum.Consumer
+
+  alias Nostrum.Api.Message
+
+  def handle_event({:MESSAGE_CREATE, msg, _ws_state}) do
+    case msg.content do
+      "!sleep" ->
+        Message.create(msg.channel_id, "Going to sleep...")
+        # This won't stop other events from being handled.
+        Process.sleep(3000)
+
+      "!ping" ->
+        Message.create(msg.channel_id, "pyongyang!")
+
+      "!raise" ->
+        # This won't crash the entire Consumer.
+        raise "No problems here!"
+
+      _ ->
+        :ignore
+    end
   end
 end
