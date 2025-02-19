@@ -2,6 +2,8 @@ defmodule SnifflingBot.Application do
   use Application
 
   def start(_type, _args) do
+    SnifflingBot.Storage.init()
+
     children = [
       SnifflingBot
     ]
