@@ -19,6 +19,7 @@ defmodule SnifflingBot.Consumer do
   alias Nostrum.Api.ApplicationCommand
   alias Nostrum.Api.Interaction
   alias SnifflingBot.Storage
+  alias Tentacat.Client
 
   @commands [
     {"configure", "Configure the bot with the current discord user and github access token.",
@@ -55,18 +56,28 @@ defmodule SnifflingBot.Consumer do
     end)
   end
 
+  # I will eventually turn this discord bot into a Github App
+  # and create a webserver to handle the OAuth flow.
+  # To make this apparent, I'm not going to perform validation checks on the token.
+  def do_command(%{user: user, data: %{name: "configure", options: options} = _interaction}) do
+    [%{value: access_token} = _head | _] = options
+
+    client = Tentacat.Client.new(%{access_token: access_token})
+
+    case Tentacat.Users.me(client) do
+      {200, %{"login" => login}, _response} ->
+        Storage.store(user.id, access_token)
+        {:msg, "Bot configured with github user #{login}."}
+
+      {401, _json, _response} ->
+        {:msg, "Failed to configure bot. Access token is invalid."}
+    end
+  end
+
   def do_command(%{data: %{name: "verify"}} = interaction) do
     case Storage.get_token(interaction.user.id) do
       {:ok, _} -> {:msg, "Bot is configured correctly."}
       {:error, _} -> {:msg, "Bot is not configured correctly."}
     end
-  end
-
-  def do_command(%{user: user, data: %{name: "configure", options: options} = _interaction}) do
-    [head | _] = options
-    IO.inspect(head.value)
-    Storage.store(user.id, head.value)
-
-    {:msg, "Bot is now configured to perform REST API calls to Github."}
   end
 end
