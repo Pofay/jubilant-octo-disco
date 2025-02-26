@@ -31,6 +31,15 @@ defmodule SnifflingBot.Consumer do
          required: true
        }
      ]},
+    {"setup-gist", "Setup the bot to create the gist file for the user.",
+     [
+       %{
+         name: "gist_filename",
+         description: "The name of the gist file to create.",
+         type: 3,
+         required: true
+       }
+     ]},
     {"verify", "Verify the bot is configured correctly.", []}
   ]
 
@@ -56,21 +65,55 @@ defmodule SnifflingBot.Consumer do
     end)
   end
 
+  # I woud like to find an alternative to with matching as its very verbose
+  # I'd have like it to follow a Railway Oriented Programming pattern
+  def do_command(%{user: user, data: %{name: "setup-gist", options: options} = _interaction}) do
+    [%{value: gist_filename} = _head | _] = options
+
+    case Storage.get_token(user.id) do
+      {:ok, access_token} ->
+        client = Tentacat.Client.new(%{access_token: access_token})
+
+        with {:ok, gists} <- get_github_gists(client) do
+          case Enum.find(gists, fn gist ->
+                 gist["description"] == gist_filename
+               end) do
+            nil ->
+              with {:ok, gist} <- create_gist(client, gist_filename) do
+                Storage.store_gist_id(user.id, gist["id"])
+
+                {:msg, "Gist setup successfully."}
+              else
+                {:error, _} -> {:msg, "Something went wrong."}
+              end
+
+            existingGist ->
+              Storage.store_gist_id(user.id, existingGist["id"])
+
+              {:msg, "Gist setup successfully."}
+          end
+        else
+          {:error, _} -> {:msg, "Something went wrong."}
+        end
+
+      {:error, _} ->
+        {:msg, "Token does not exist. Please configure the bot first."}
+    end
+  end
+
   # I will eventually turn this discord bot into a Github App
   # and create a webserver to handle the OAuth flow.
-  # To make this apparent, I'm not going to perform validation checks on the token.
+  # To make this apparent, I'm not going to perform input validation checks on the token.
   def do_command(%{user: user, data: %{name: "configure", options: options} = _interaction}) do
     [%{value: access_token} = _head | _] = options
 
     client = Tentacat.Client.new(%{access_token: access_token})
 
-    case Tentacat.Users.me(client) do
-      {200, %{"login" => login}, _response} ->
-        Storage.store(user.id, access_token)
-        {:msg, "Bot configured with github user #{login}."}
-
-      {401, _json, _response} ->
-        {:msg, "Failed to configure bot. Access token is invalid."}
+    with {:ok, _} <- get_github_user(client) do
+      Storage.store_token(user.id, access_token)
+      {:msg, "Bot configured successfully."}
+    else
+      {:error, msg} -> {:msg, msg}
     end
   end
 
@@ -78,6 +121,35 @@ defmodule SnifflingBot.Consumer do
     case Storage.get_token(interaction.user.id) do
       {:ok, _} -> {:msg, "Bot is configured correctly."}
       {:error, _} -> {:msg, "Bot is not configured correctly."}
+    end
+  end
+
+  def get_github_user(client) do
+    case Tentacat.Users.me(client) do
+      {200, %{"login" => login}, _response} -> {:ok, login}
+      {401, _json, _response} -> {:error, "Access token is invalid."}
+    end
+  end
+
+  def get_github_gists(client) do
+    case Tentacat.Gists.list_mine(client) do
+      {200, gists, _response} -> {:ok, gists}
+      {401, _json, _response} -> {:error, "Access token is invalid."}
+    end
+  end
+
+  def create_gist(client, gist_filename) do
+    request = %{
+      "files" => %{
+        gist_filename => %{"content" => "// Empty"}
+      },
+      "description" => gist_filename,
+      "public" => false
+    }
+
+    case Tentacat.Gists.create(client, request) do
+      {201, gist, _response} -> {:ok, gist}
+      {401, _json, _response} -> {:error, "Access token is invalid."}
     end
   end
 end
