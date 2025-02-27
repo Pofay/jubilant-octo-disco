@@ -40,6 +40,15 @@ defmodule SnifflingBot.Consumer do
          required: true
        }
      ]},
+    {"add-link", "Add a link to the gist file.",
+     [
+       %{
+         name: "link",
+         description: "The link to add to the gist file.",
+         type: 3,
+         required: true
+       }
+     ]},
     {"verify", "Verify the bot is configured correctly.", []}
   ]
 
@@ -74,21 +83,23 @@ defmodule SnifflingBot.Consumer do
       {:ok, access_token} ->
         client = Tentacat.Client.new(%{access_token: access_token})
 
+        # This GET request may cause the bot to lag, especially if the user has a lot of gists.
+        # I will migrate to the GraphQL API later to make this more efficient.
         with {:ok, gists} <- get_github_gists(client) do
-          case Enum.find(gists, fn gist ->
-                 gist["description"] == gist_filename
-               end) do
+          case find_gist(gists, gist_filename) do
             nil ->
               with {:ok, gist} <- create_gist(client, gist_filename) do
-                Storage.store_gist_id(user.id, gist["id"])
-
+                Storage.store_gist_info(user.id, %{gist_id: gist["id"], filename: gist_filename})
                 {:msg, "Gist setup successfully."}
               else
                 {:error, _} -> {:msg, "Something went wrong."}
               end
 
             existingGist ->
-              Storage.store_gist_id(user.id, existingGist["id"])
+              Storage.store_gist_info(user.id, %{
+                gist_id: existingGist["id"],
+                filename: gist_filename
+              })
 
               {:msg, "Gist setup successfully."}
           end
@@ -117,6 +128,38 @@ defmodule SnifflingBot.Consumer do
     end
   end
 
+  def do_command(%{user: user, data: %{name: "add-link", options: options} = _interaction}) do
+    [%{value: link} = _head | _] = options
+
+    with {:ok, access_token} <- Storage.get_token(user.id),
+         {:ok, %{gist_id: gist_id, filename: filename}} <-
+           Storage.get_gist_information(user.id) do
+      client = Tentacat.Client.new(%{access_token: access_token})
+
+      case get_github_gist(client, gist_id) do
+        {:ok, gist} ->
+          new_content = "#{gist["files"][filename]["content"]}\n#{link}"
+
+          request = %{
+            "files" => %{
+              filename => %{"content" => new_content}
+            }
+          }
+
+          case Tentacat.Gists.edit(client, gist_id, request) do
+            {200, _gist, _response} -> {:msg, "Link added successfully."}
+            {401, _json, _response} -> {:msg, "Access token is invalid."}
+            {404, _json, _response} -> {:msg, "Gist not found."}
+          end
+
+        {:error, _} ->
+          {:msg, "Gist not found."}
+      end
+    else
+      {:error, _} -> {:msg, "Bot is not configured correctly."}
+    end
+  end
+
   def do_command(%{data: %{name: "verify"}} = interaction) do
     case Storage.get_token(interaction.user.id) do
       {:ok, _} -> {:msg, "Bot is configured correctly."}
@@ -138,6 +181,13 @@ defmodule SnifflingBot.Consumer do
     end
   end
 
+  def get_github_gist(client, gist_id) do
+    case Tentacat.Gists.gist_get(client, gist_id) do
+      {200, gist, _response} -> {:ok, gist}
+      {404, _json, _response} -> {:error, "Gist not found."}
+    end
+  end
+
   def create_gist(client, gist_filename) do
     request = %{
       "files" => %{
@@ -151,5 +201,11 @@ defmodule SnifflingBot.Consumer do
       {201, gist, _response} -> {:ok, gist}
       {401, _json, _response} -> {:error, "Access token is invalid."}
     end
+  end
+
+  def find_gist(gists, gist_filename) do
+    Enum.find(gists, fn gist ->
+      gist["description"] == gist_filename
+    end)
   end
 end

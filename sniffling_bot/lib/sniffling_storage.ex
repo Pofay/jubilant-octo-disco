@@ -18,7 +18,14 @@ defmodule SnifflingBot.Storage do
     end
   end
 
-  def store_gist_id(discord_user_id, gist_id) do
-    :ets.insert(@gist_id_table, {discord_user_id, gist_id})
+  def store_gist_info(discord_user_id, gist_information) do
+    :ets.insert(@gist_id_table, {discord_user_id, gist_information})
+  end
+
+  def get_gist_information(discord_user_id) do
+    case :ets.lookup(@gist_id_table, discord_user_id) do
+      [{_, gist_information}] -> {:ok, gist_information}
+      _ -> {:error, "No gist ID found for user."}
+    end
   end
 end
