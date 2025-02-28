@@ -19,7 +19,6 @@ defmodule SnifflingBot.Consumer do
   alias Nostrum.Api.ApplicationCommand
   alias Nostrum.Api.Interaction
   alias SnifflingBot.Storage
-  alias Tentacat.Client
 
   @commands [
     {"configure", "Configure the bot with the current discord user and github access token.",
@@ -27,15 +26,6 @@ defmodule SnifflingBot.Consumer do
        %{
          name: "access_token",
          description: "The access token to use for github.",
-         type: 3,
-         required: true
-       }
-     ]},
-    {"setup-gist", "Setup the bot to create the gist file for the user.",
-     [
-       %{
-         name: "gist_filename",
-         description: "The name of the gist file to create.",
          type: 3,
          required: true
        }
@@ -59,9 +49,7 @@ defmodule SnifflingBot.Consumer do
   end
 
   def handle_event({:INTERACTION_CREATE, interaction, _ws_state}) do
-    {:msg, msg} = do_command(interaction)
-
-    Interaction.create_response(interaction, %{type: 4, data: %{content: msg}})
+    do_command(interaction)
   end
 
   def create_guild_commands(guild_id) do
@@ -74,97 +62,85 @@ defmodule SnifflingBot.Consumer do
     end)
   end
 
-  # I woud like to find an alternative to with matching as its very verbose
-  # I'd have like it to follow a Railway Oriented Programming pattern
-  def do_command(%{user: user, data: %{name: "setup-gist", options: options} = _interaction}) do
-    [%{value: gist_filename} = _head | _] = options
-
-    case Storage.get_token(user.id) do
-      {:ok, access_token} ->
-        client = Tentacat.Client.new(%{access_token: access_token})
-
-        # This GET request may cause the bot to lag, especially if the user has a lot of gists.
-        # I will migrate to the GraphQL API later to make this more efficient.
-        with {:ok, gists} <- get_github_gists(client) do
-          case find_gist(gists, gist_filename) do
-            nil ->
-              with {:ok, gist} <- create_gist(client, gist_filename) do
-                Storage.store_gist_info(user.id, %{gist_id: gist["id"], filename: gist_filename})
-                {:msg, "Gist setup successfully."}
-              else
-                {:error, _} -> {:msg, "Something went wrong."}
-              end
-
-            existingGist ->
-              Storage.store_gist_info(user.id, %{
-                gist_id: existingGist["id"],
-                filename: gist_filename
-              })
-
-              {:msg, "Gist setup successfully."}
-          end
-        else
-          {:error, _} -> {:msg, "Something went wrong."}
-        end
-
-      {:error, _} ->
-        {:msg, "Token does not exist. Please configure the bot first."}
-    end
-  end
-
   # I will eventually turn this discord bot into a Github App
   # and create a webserver to handle the OAuth flow.
   # To make this apparent, I'm not going to perform input validation checks on the token.
-  def do_command(%{user: user, data: %{name: "configure", options: options} = _interaction}) do
+  def do_command(%{user: user, data: %{name: "configure", options: options}} = interaction) do
     [%{value: access_token} = _head | _] = options
 
     client = Tentacat.Client.new(%{access_token: access_token})
+    gist_filename = "#{user.username}_links_archive"
 
-    with {:ok, _} <- get_github_user(client) do
-      Storage.store_token(user.id, access_token)
-      {:msg, "Bot configured successfully."}
-    else
-      {:error, msg} -> {:msg, msg}
-    end
+    Interaction.create_response(interaction, %{type: 5})
+
+    Task.start(fn ->
+      with {:ok, _} <- verify_and_store_token(user, access_token, client),
+           {:ok, gists} <- get_github_gists(client),
+           {:ok, nullable_gist} <- find_gist(gists, gist_filename),
+           {:ok, actual_gist} <- create_or_return_gist(client, gist_filename, nullable_gist) do
+        Storage.store_gist_info(user.id, %{gist_id: actual_gist["id"], filename: gist_filename})
+
+        Interaction.edit_response(interaction, %{
+          content: "Bot configured successfully."
+        })
+      else
+        {:error, msg} ->
+          Interaction.edit_response(interaction, %{
+            content: msg
+          })
+      end
+    end)
   end
 
-  def do_command(%{user: user, data: %{name: "add-link", options: options} = _interaction}) do
+  def do_command(%{user: user, data: %{name: "add-link", options: options}} = interaction) do
     [%{value: link} = _head | _] = options
 
-    with {:ok, access_token} <- Storage.get_token(user.id),
-         {:ok, %{gist_id: gist_id, filename: filename}} <-
-           Storage.get_gist_information(user.id) do
-      client = Tentacat.Client.new(%{access_token: access_token})
+    {:msg, message} =
+      with {:ok, access_token} <- Storage.get_token(user.id),
+           {:ok, %{gist_id: gist_id, filename: filename}} <-
+             Storage.get_gist_information(user.id) do
+        client = Tentacat.Client.new(%{access_token: access_token})
 
-      case get_github_gist(client, gist_id) do
-        {:ok, gist} ->
-          new_content = "#{gist["files"][filename]["content"]}\n#{link}"
+        case get_github_gist(client, gist_id) do
+          {:ok, gist} ->
+            new_content = "#{gist["files"][filename]["content"]}\n#{link}"
 
-          request = %{
-            "files" => %{
-              filename => %{"content" => new_content}
+            request = %{
+              "files" => %{
+                filename => %{"content" => new_content}
+              }
             }
-          }
 
-          case Tentacat.Gists.edit(client, gist_id, request) do
-            {200, _gist, _response} -> {:msg, "Link added successfully."}
-            {401, _json, _response} -> {:msg, "Access token is invalid."}
-            {404, _json, _response} -> {:msg, "Gist not found."}
-          end
+            case Tentacat.Gists.edit(client, gist_id, request) do
+              {200, _gist, _response} -> {:msg, "Link added successfully."}
+              {401, _json, _response} -> {:msg, "Access token is invalid."}
+              {404, _json, _response} -> {:msg, "Gist not found."}
+            end
 
-        {:error, _} ->
-          {:msg, "Gist not found."}
+          {:error, _} ->
+            {:msg, "Gist not found."}
+        end
+      else
+        {:error, _} -> {:msg, "Bot is not configured correctly."}
       end
-    else
-      {:error, _} -> {:msg, "Bot is not configured correctly."}
-    end
+
+    Interaction.create_response(interaction, %{
+      type: 4,
+      data: %{content: message}
+    })
   end
 
   def do_command(%{data: %{name: "verify"}} = interaction) do
-    case Storage.get_token(interaction.user.id) do
-      {:ok, _} -> {:msg, "Bot is configured correctly."}
-      {:error, _} -> {:msg, "Bot is not configured correctly."}
-    end
+    {:msg, message} =
+      case Storage.get_token(interaction.user.id) do
+        {:ok, _} -> {:msg, "Bot is configured correctly."}
+        {:error, _} -> {:msg, "Bot is not configured correctly."}
+      end
+
+    Interaction.create_response(interaction, %{
+      type: 4,
+      data: %{content: message}
+    })
   end
 
   def get_github_user(client) do
@@ -203,9 +179,32 @@ defmodule SnifflingBot.Consumer do
     end
   end
 
+  defp verify_and_store_token(user, access_token, client) do
+    with {:ok, _} <- get_github_user(client) do
+      Storage.store_token(user.id, access_token)
+      {:ok, "Bot configured successfully."}
+    else
+      {:error, msg} -> {:error, msg}
+    end
+  end
+
+  defp create_or_return_gist(client, gist_filename, nil) do
+    case create_gist(client, gist_filename) do
+      {:ok, gist} -> {:ok, gist}
+      {:error, _} -> {:error, "Something went wrong."}
+    end
+  end
+
+  defp create_or_return_gist(_client, _gist_filename, gist) do
+    {:ok, gist}
+  end
+
   def find_gist(gists, gist_filename) do
-    Enum.find(gists, fn gist ->
-      gist["description"] == gist_filename
-    end)
+    case Enum.find(gists, fn gist ->
+           gist["description"] == gist_filename
+         end) do
+      nil -> {:ok, nil}
+      gist -> {:ok, gist}
+    end
   end
 end
