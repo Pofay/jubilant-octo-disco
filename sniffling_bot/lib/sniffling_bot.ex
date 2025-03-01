@@ -39,6 +39,7 @@ defmodule SnifflingBot.Consumer do
          required: true
        }
      ]},
+    {"show-links", "Show all the links in the gist file.", []},
     {"verify", "Verify the bot is configured correctly.", []}
   ]
 
@@ -116,6 +117,31 @@ defmodule SnifflingBot.Consumer do
               {401, _json, _response} -> {:msg, "Access token is invalid."}
               {404, _json, _response} -> {:msg, "Gist not found."}
             end
+
+          {:error, _} ->
+            {:msg, "Gist not found."}
+        end
+      else
+        {:error, _} -> {:msg, "Bot is not configured correctly."}
+      end
+
+    Interaction.create_response(interaction, %{
+      type: 4,
+      data: %{content: message}
+    })
+  end
+
+  def do_command(%{user: user, data: %{name: "show-links"}} = interaction) do
+    {:msg, message} =
+      with {:ok, access_token} <- Storage.get_token(user.id),
+           {:ok, %{gist_id: gist_id, filename: filename}} <-
+             Storage.get_gist_information(user.id) do
+        client = Tentacat.Client.new(%{access_token: access_token})
+
+        case get_github_gist(client, gist_id) do
+          {:ok, gist} ->
+            links = gist["files"][filename]["content"]
+            {:msg, links}
 
           {:error, _} ->
             {:msg, "Gist not found."}
