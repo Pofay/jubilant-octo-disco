@@ -132,7 +132,10 @@ defmodule SnifflingBot.Consumer do
   end
 
   def do_command(%{user: user, data: %{name: "show-links"}} = interaction) do
-    {:msg, message} =
+    page = 1
+    total_pages = 1
+
+    {:msg, paginated_links} =
       with {:ok, access_token} <- Storage.get_token(user.id),
            {:ok, %{gist_id: gist_id, filename: filename}} <-
              Storage.get_gist_information(user.id) do
@@ -152,7 +155,28 @@ defmodule SnifflingBot.Consumer do
 
     Interaction.create_response(interaction, %{
       type: 4,
-      data: %{content: message}
+      data: %{
+        content: "**Links (Page #{page}/#{total_pages})**\n#{paginated_links}",
+        components: [
+          %{
+            type: 1,
+            components: [
+              %{
+                type: 2,
+                style: 2,
+                custom_id: "previous",
+                label: "Previous",
+              },
+              %{
+                type: 2,
+                style: 2,
+                custom_id: "next",
+                label: "Next",
+              }
+            ]
+          }
+        ]
+      }
     })
   end
 
