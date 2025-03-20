@@ -257,6 +257,7 @@ defmodule SnifflingBot.Consumer do
 
     %{
       content: "**Links (Page #{pageNumber}/#{total_pages}):**\n#{paginated_links}",
+      flags: 64,
       components: [
         %{
           type: 1,
