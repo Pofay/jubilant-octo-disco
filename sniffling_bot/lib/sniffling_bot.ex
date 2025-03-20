@@ -132,52 +132,33 @@ defmodule SnifflingBot.Consumer do
   end
 
   def do_command(%{user: user, data: %{name: "show-links"}} = interaction) do
-    page = 1
-    total_pages = 1
+    with {:ok, access_token} <- Storage.get_token(user.id),
+         {:ok, %{gist_id: gist_id, filename: filename}} <-
+           Storage.get_gist_information(user.id),
+         {:ok, gist} <-
+           get_github_gist(Tentacat.Client.new(%{access_token: access_token}), gist_id) do
+      links = gist["files"][filename]["content"] |> String.split("\n", trim: true) |> Enum.filter(&(&1 != "// Empty"))
 
-    {:msg, paginated_links} =
-      with {:ok, access_token} <- Storage.get_token(user.id),
-           {:ok, %{gist_id: gist_id, filename: filename}} <-
-             Storage.get_gist_information(user.id) do
-        client = Tentacat.Client.new(%{access_token: access_token})
-
-        case get_github_gist(client, gist_id) do
-          {:ok, gist} ->
-            links = gist["files"][filename]["content"]
-            {:msg, links}
-
-          {:error, _} ->
-            {:msg, "Gist not found."}
-        end
+      if(Enum.empty?(links)) do
+        Interaction.create_response(interaction, %{
+          type: 4,
+          data: %{content: "No links found."}
+        })
       else
-        {:error, _} -> {:msg, "Bot is not configured correctly."}
-      end
+        # Storage.store_pagination_state(user.id, links, 1)
 
-    Interaction.create_response(interaction, %{
-      type: 4,
-      data: %{
-        content: "**Links (Page #{page}/#{total_pages})**\n#{paginated_links}",
-        components: [
-          %{
-            type: 1,
-            components: [
-              %{
-                type: 2,
-                style: 2,
-                custom_id: "previous",
-                label: "Previous",
-              },
-              %{
-                type: 2,
-                style: 2,
-                custom_id: "next",
-                label: "Next",
-              }
-            ]
-          }
-        ]
-      }
-    })
+        Interaction.create_response(interaction, %{
+          type: 4,
+          data: generate_paginated_message(user.id, links, 1)
+        })
+      end
+    else
+      {:error, _} ->
+        Interaction.create_response(interaction, %{
+          type: 4,
+          data: %{content: "Bot is not configured correctly."}
+        })
+    end
   end
 
   def do_command(%{data: %{name: "verify"}} = interaction) do
@@ -227,6 +208,38 @@ defmodule SnifflingBot.Consumer do
       {201, gist, _response} -> {:ok, gist}
       {401, _json, _response} -> {:error, "Access token is invalid."}
     end
+  end
+
+  defp generate_paginated_message(user_id, links, pageNumber) do
+    page_size = 5
+    total_pages = ceil(length(links) / page_size)
+    start_index = (pageNumber - 1) * page_size
+    paginated_links = Enum.slice(links, start_index, page_size) |> Enum.join("\n")
+
+    %{
+      content: "**Links (Page #{pageNumber}/#{total_pages}):**\n#{paginated_links}",
+      components: [
+        %{
+          type: 1,
+          components: [
+            %{
+              type: 2,
+              style: 2,
+              custom_id: "prev_page:#{user_id}",
+              label: "⬅ Previous",
+              disabled: pageNumber == total_pages
+            },
+            %{
+              type: 2,
+              style: 2,
+              custom_id: "next_page:#{user_id}",
+              label: "Next ➡",
+              disabled: pageNumber == total_pages
+            }
+          ]
+        }
+      ]
+    }
   end
 
   defp verify_and_store_token(user, access_token, client) do
