@@ -137,7 +137,10 @@ defmodule SnifflingBot.Consumer do
            Storage.get_gist_information(user.id),
          {:ok, gist} <-
            get_github_gist(Tentacat.Client.new(%{access_token: access_token}), gist_id) do
-      links = gist["files"][filename]["content"] |> String.split("\n", trim: true) |> Enum.filter(&(&1 != "// Empty"))
+      links =
+        gist["files"][filename]["content"]
+        |> String.split("\n", trim: true)
+        |> Enum.filter(&(&1 != "// Empty"))
 
       if(Enum.empty?(links)) do
         Interaction.create_response(interaction, %{
@@ -145,7 +148,7 @@ defmodule SnifflingBot.Consumer do
           data: %{content: "No links found."}
         })
       else
-        # Storage.store_pagination_state(user.id, links, 1)
+        Storage.store_pagination_state(user.id, links, 1)
 
         Interaction.create_response(interaction, %{
           type: 4,
@@ -172,6 +175,42 @@ defmodule SnifflingBot.Consumer do
       type: 4,
       data: %{content: message}
     })
+  end
+
+  def do_command(%{data: %{custom_id: custom_id}} = interaction) do
+    [action, user_id_as_string] = String.split(custom_id, ":")
+    user_id = String.to_integer(user_id_as_string)
+
+    with {:ok, paginationState} <- Storage.get_pagination_state(user_id) do
+      links = elem(paginationState, 0)
+      pageNumber = elem(paginationState, 1)
+
+      case action do
+        "prev_page" ->
+          new_pageNumber = max(1, pageNumber - 1)
+          Storage.update_pagination_state(user_id, links, new_pageNumber)
+
+          Interaction.create_response(interaction, %{
+            type: 4,
+            data: generate_paginated_message(user_id, links, new_pageNumber)
+          })
+
+        "next_page" ->
+          new_pageNumber = max(1, pageNumber + 1)
+          Storage.update_pagination_state(user_id, links, new_pageNumber)
+
+          Interaction.create_response(interaction, %{
+            type: 4,
+            data: generate_paginated_message(user_id, links, new_pageNumber)
+          })
+      end
+    else
+      {:error, message} ->
+        Interaction.create_response(interaction, %{
+          type: 4,
+          data: %{content: message}
+        })
+    end
   end
 
   def get_github_user(client) do
@@ -227,7 +266,7 @@ defmodule SnifflingBot.Consumer do
               style: 2,
               custom_id: "prev_page:#{user_id}",
               label: "⬅ Previous",
-              disabled: pageNumber == total_pages
+              disabled: pageNumber == 1
             },
             %{
               type: 2,
