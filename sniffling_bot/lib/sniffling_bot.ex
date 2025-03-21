@@ -205,8 +205,7 @@ defmodule SnifflingBot.Consumer do
 
         "next_page" ->
           new_pageNumber = max(1, pageNumber + 1)
-          page_size = 5
-          total_pages = ceil(length(links) / page_size)
+          total_pages = get_total_pages(links, 5)
 
           if(new_pageNumber > total_pages) do
             Interaction.create_response(interaction, %{
@@ -269,7 +268,7 @@ defmodule SnifflingBot.Consumer do
 
   defp generate_paginated_message(user_id, links, pageNumber) do
     page_size = 5
-    total_pages = ceil(length(links) / page_size)
+    total_pages = get_total_pages(links, page_size)
     start_index = (pageNumber - 1) * page_size
     paginated_links = Enum.slice(links, start_index, page_size) |> Enum.join("\n")
 
@@ -366,5 +365,9 @@ defmodule SnifflingBot.Consumer do
       nil -> {:ok, nil}
       gist -> {:ok, gist}
     end
+  end
+
+  defp get_total_pages(links, page_size) do
+    ceil(length(links) / page_size)
   end
 end
