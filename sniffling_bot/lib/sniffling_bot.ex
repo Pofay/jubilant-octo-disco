@@ -194,6 +194,7 @@ defmodule SnifflingBot.Consumer do
             type: 4,
             data: generate_paginated_message(user_id, links, new_pageNumber)
           })
+
         "reset_page" ->
           Storage.update_pagination_state(user_id, links, 1)
 
@@ -201,14 +202,25 @@ defmodule SnifflingBot.Consumer do
             type: 4,
             data: generate_paginated_message(user_id, links, 1)
           })
+
         "next_page" ->
           new_pageNumber = max(1, pageNumber + 1)
-          Storage.update_pagination_state(user_id, links, new_pageNumber)
+          page_size = 5
+          total_pages = ceil(length(links) / page_size)
 
-          Interaction.create_response(interaction, %{
-            type: 4,
-            data: generate_paginated_message(user_id, links, new_pageNumber)
-          })
+          if(new_pageNumber > total_pages) do
+            Interaction.create_response(interaction, %{
+              type: 4,
+              data: generate_empty_paginated_message(user_id)
+            })
+          else
+            Storage.update_pagination_state(user_id, links, new_pageNumber)
+
+            Interaction.create_response(interaction, %{
+              type: 4,
+              data: generate_paginated_message(user_id, links, new_pageNumber)
+            })
+          end
       end
     else
       {:error, message} ->
@@ -286,7 +298,40 @@ defmodule SnifflingBot.Consumer do
               style: 2,
               custom_id: "next_page:#{user_id}",
               label: "Next ➡",
-              disabled: pageNumber == total_pages
+              disabled: pageNumber >= total_pages
+            }
+          ]
+        }
+      ]
+    }
+  end
+
+  defp generate_empty_paginated_message(user_id) do
+    %{
+      content: "**No more links to show.**",
+      flags: 64,
+      components: [
+        %{
+          type: 1,
+          components: [
+            %{
+              type: 2,
+              style: 2,
+              custom_id: "prev_page:#{user_id}",
+              label: "⬅ Previous"
+            },
+            %{
+              type: 2,
+              style: 1,
+              custom_id: "reset_page:#{user_id}",
+              label: "Reset"
+            },
+            %{
+              type: 2,
+              style: 2,
+              custom_id: "next_page:#{user_id}",
+              label: "Next ➡",
+              disabled: true
             }
           ]
         }

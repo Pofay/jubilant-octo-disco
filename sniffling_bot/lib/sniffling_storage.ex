@@ -32,12 +32,10 @@ defmodule SnifflingBot.Storage do
   end
 
   def store_pagination_state(discord_user_id, links, pageNumber) do
-    IO.puts "Storing pagination state for user #{discord_user_id}"
     :ets.insert(@pagination_state_table, {discord_user_id, links, pageNumber})
   end
 
   def get_pagination_state(discord_user_id) do
-    IO.puts "Getting pagination state for user #{discord_user_id}"
     case :ets.lookup(@pagination_state_table, discord_user_id) do
       [{_, links, pageNumber}] -> {:ok, {links, pageNumber}}
       _ -> {:error, "No pagination state found for user."}
