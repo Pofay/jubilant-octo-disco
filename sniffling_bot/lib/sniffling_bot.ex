@@ -194,7 +194,13 @@ defmodule SnifflingBot.Consumer do
             type: 4,
             data: generate_paginated_message(user_id, links, new_pageNumber)
           })
+        "reset_page" ->
+          Storage.update_pagination_state(user_id, links, 1)
 
+          Interaction.create_response(interaction, %{
+            type: 4,
+            data: generate_paginated_message(user_id, links, 1)
+          })
         "next_page" ->
           new_pageNumber = max(1, pageNumber + 1)
           Storage.update_pagination_state(user_id, links, new_pageNumber)
@@ -268,6 +274,12 @@ defmodule SnifflingBot.Consumer do
               custom_id: "prev_page:#{user_id}",
               label: "⬅ Previous",
               disabled: pageNumber == 1
+            },
+            %{
+              type: 2,
+              style: 1,
+              custom_id: "reset_page:#{user_id}",
+              label: "Reset"
             },
             %{
               type: 2,
