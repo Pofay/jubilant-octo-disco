@@ -28,7 +28,7 @@ defmodule BinarySearchPractice.StandardBinarySearch do
     do_binary_search(0, length(list) - 1, list, target)
   end
 
-  def do_binary_search(left, right, list, _target) when left > right do
+  def do_binary_search(left, right, _list, _target) when left > right do
     -1
   end
 
