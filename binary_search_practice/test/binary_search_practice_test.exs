@@ -2,7 +2,8 @@ defmodule BinarySearchPracticeTest do
   alias BinarySearchPractice.{
     PerfectSquare,
     StandardBinarySearch,
-    FindTrueInSortedBooleanList
+    FindTrueInSortedBooleanList,
+    FindFeasibleValue
   }
 
   use ExUnit.Case
@@ -56,5 +57,13 @@ defmodule BinarySearchPracticeTest do
 
   test "find_boundary/1 sanity test" do
     assert FindTrueInSortedBooleanList.find_boundary([false, false, false, true, true, true, true]) == 3
+  end
+
+  test "first true feasible value" do
+    assert FindFeasibleValue.find_first_true([false, false, true]) == 2
+    assert FindFeasibleValue.find_first_true([false, true, true]) == 1
+    assert FindFeasibleValue.find_first_true([true, true, true]) == 0
+    assert FindFeasibleValue.find_first_true([false, false, false]) == -1
+    assert FindFeasibleValue.find_first_true([]) == -1
   end
 end
