@@ -56,7 +56,8 @@ defmodule BinarySearchPracticeTest do
   end
 
   test "find_boundary/1 sanity test" do
-    assert FindTrueInSortedBooleanList.find_boundary([false, false, false, true, true, true, true]) == 3
+    assert FindTrueInSortedBooleanList.find_boundary([false, false, false, true, true, true, true]) ==
+             3
   end
 
   test "first true feasible value" do
@@ -65,5 +66,10 @@ defmodule BinarySearchPracticeTest do
     assert FindFeasibleValue.find_first_true([true, true, true]) == 0
     assert FindFeasibleValue.find_first_true([false, false, false]) == -1
     assert FindFeasibleValue.find_first_true([]) == -1
+  end
+
+  test "find_feasible_target/2" do
+    assert FindFeasibleValue.find_feasible_target([], 1) == -1
+    assert FindFeasibleValue.find_feasible_target([1, 2, 3, 4, 5], 3) == 2
   end
 end
