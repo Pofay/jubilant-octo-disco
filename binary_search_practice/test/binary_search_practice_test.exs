@@ -3,7 +3,8 @@ defmodule BinarySearchPracticeTest do
     PerfectSquare,
     StandardBinarySearch,
     FindTrueInSortedBooleanList,
-    FindFeasibleValue
+    FindFeasibleValue,
+    FirstElementLargerOrEqualToTarget
   }
 
   use ExUnit.Case
@@ -71,5 +72,10 @@ defmodule BinarySearchPracticeTest do
   test "find_feasible_target/2" do
     assert FindFeasibleValue.find_feasible_target([], 1) == -1
     assert FindFeasibleValue.find_feasible_target([1, 2, 3, 4, 5], 3) == 2
+    assert FindFeasibleValue.find_feasible_target([1, 3, 3, 5, 8, 8, 10], 3) === 1
+  end
+
+  test "first element larger than or equal to target" do
+    assert FirstElementLargerOrEqualToTarget.find_target([1, 3, 3, 5, 8, 8, 10], 3) === 1
   end
 end
