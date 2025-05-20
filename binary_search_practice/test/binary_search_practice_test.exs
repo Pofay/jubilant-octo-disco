@@ -4,7 +4,8 @@ defmodule BinarySearchPracticeTest do
     StandardBinarySearch,
     FindTrueInSortedBooleanList,
     FindFeasibleValue,
-    FirstElementLargerOrEqualToTarget
+    FirstElementLargerOrEqualToTarget,
+    FirstOccurence
   }
 
   use ExUnit.Case
@@ -77,5 +78,12 @@ defmodule BinarySearchPracticeTest do
 
   test "first element larger than or equal to target" do
     assert FirstElementLargerOrEqualToTarget.find_target([1, 3, 3, 5, 8, 8, 10], 3) === 1
+  end
+
+  test "first occurence" do
+    assert FirstOccurence.find_first_occurence([], 1) === -1
+    assert FirstOccurence.find_first_occurence([1, 3, 3, 3, 3, 6, 10, 10, 10, 100], 3) === 1
+    assert FirstOccurence.find_first_occurence([2, 3, 5, 7, 11, 19], 20) === -1
+    assert FirstOccurence.find_first_occurence([2, 3, 5, 7, 11, 13, 17, 19], 19) === 7
   end
 end
