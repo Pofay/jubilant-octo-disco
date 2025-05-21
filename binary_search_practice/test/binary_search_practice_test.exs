@@ -1,11 +1,13 @@
 defmodule BinarySearchPracticeTest do
+  alias String.Tokenizer.Security
   alias BinarySearchPractice.{
     PerfectSquare,
     StandardBinarySearch,
     FindTrueInSortedBooleanList,
     FindFeasibleValue,
     FirstElementLargerOrEqualToTarget,
-    FirstOccurence
+    FirstOccurence,
+    SquareRootEstimation
   }
 
   use ExUnit.Case
@@ -15,6 +17,7 @@ defmodule BinarySearchPracticeTest do
     assert PerfectSquare.is_perfect_square(1) == true
     assert PerfectSquare.is_perfect_square(4) == true
     assert PerfectSquare.is_perfect_square(49) == true
+    assert PerfectSquare.is_perfect_square(9) == true
   end
 
   test "is_perfect_square/1 sad paths" do
@@ -58,7 +61,15 @@ defmodule BinarySearchPracticeTest do
   end
 
   test "find_boundary/1 sanity test" do
-    assert FindTrueInSortedBooleanList.find_boundary([false, false, false, true, true, true, true]) ==
+    assert FindTrueInSortedBooleanList.find_boundary([
+             false,
+             false,
+             false,
+             true,
+             true,
+             true,
+             true
+           ]) ==
              3
   end
 
@@ -85,5 +96,12 @@ defmodule BinarySearchPracticeTest do
     assert FirstOccurence.find_first_occurence([1, 3, 3, 3, 3, 6, 10, 10, 10, 100], 3) === 1
     assert FirstOccurence.find_first_occurence([2, 3, 5, 7, 11, 19], 20) === -1
     assert FirstOccurence.find_first_occurence([2, 3, 5, 7, 11, 13, 17, 19], 19) === 7
+  end
+
+  test "perfect square estimation" do
+    assert SquareRootEstimation.estimate_square_root(0) === 0
+    assert SquareRootEstimation.estimate_square_root(8) === 2
+    assert SquareRootEstimation.estimate_square_root(9) === 3
+    assert SquareRootEstimation.estimate_square_root(16) === 4
   end
 end
