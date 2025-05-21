@@ -1,5 +1,4 @@
 defmodule BinarySearchPracticeTest do
-  alias String.Tokenizer.Security
   alias BinarySearchPractice.{
     PerfectSquare,
     StandardBinarySearch,
