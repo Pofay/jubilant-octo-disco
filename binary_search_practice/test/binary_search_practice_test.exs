@@ -6,7 +6,8 @@ defmodule BinarySearchPracticeTest do
     FindFeasibleValue,
     FirstElementLargerOrEqualToTarget,
     FirstOccurence,
-    SquareRootEstimation
+    SquareRootEstimation,
+    MinimumInRotatedSortedArray
   }
 
   use ExUnit.Case
@@ -102,5 +103,24 @@ defmodule BinarySearchPracticeTest do
     assert SquareRootEstimation.estimate_square_root(8) === 2
     assert SquareRootEstimation.estimate_square_root(9) === 3
     assert SquareRootEstimation.estimate_square_root(16) === 4
+  end
+
+  test "minimum in rotated sorted array" do
+    assert MinimumInRotatedSortedArray.find_minimum_value([1, 2, 3, 4, 5]) === 0
+    assert MinimumInRotatedSortedArray.find_minimum_value([30, 40, 50, 10, 20]) === 3
+    # The page assumes its 7 but its an error.
+    assert MinimumInRotatedSortedArray.find_minimum_value([3, 5, 7, 11, 17, 19, 2]) === 6
+  end
+
+  test "minimum in sorted array edge cases" do
+    # Single element
+    assert MinimumInRotatedSortedArray.find_minimum_value([99]) == 0
+
+    # Two elements
+    assert MinimumInRotatedSortedArray.find_minimum_value([1, 2]) == 0
+    assert MinimumInRotatedSortedArray.find_minimum_value([2, 1]) == 1
+
+    # Large jump
+    assert MinimumInRotatedSortedArray.find_minimum_value([1000, 2000, 3000, 1, 2, 3]) == 3
   end
 end
