@@ -8,7 +8,8 @@ defmodule BinarySearchPracticeTest do
     FirstOccurence,
     SquareRootEstimation,
     MinimumInRotatedSortedArray,
-    PeakOfMountainArray
+    PeakOfMountainArray,
+    NewsPapers
   }
 
   use ExUnit.Case
@@ -131,5 +132,9 @@ defmodule BinarySearchPracticeTest do
     assert PeakOfMountainArray.find_peak([1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1]) === 5
     assert PeakOfMountainArray.find_peak([1, 3, 5, 7, 6, 4, 2]) == 3
     assert PeakOfMountainArray.find_peak([1, 2, 4, 6, 5, 3]) == 3
+  end
+
+  assert "find feasible newspaper times" do
+    assert NewsPapers.newspapers_split([7, 2, 5, 10, 8], 2) === 18
   end
 end
