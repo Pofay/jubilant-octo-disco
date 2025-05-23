@@ -7,7 +7,8 @@ defmodule BinarySearchPracticeTest do
     FirstElementLargerOrEqualToTarget,
     FirstOccurence,
     SquareRootEstimation,
-    MinimumInRotatedSortedArray
+    MinimumInRotatedSortedArray,
+    PeakOfMountainArray
   }
 
   use ExUnit.Case
@@ -122,5 +123,13 @@ defmodule BinarySearchPracticeTest do
 
     # Large jump
     assert MinimumInRotatedSortedArray.find_minimum_value([1000, 2000, 3000, 1, 2, 3]) == 3
+  end
+
+  test "find peak of mountain array" do
+    assert PeakOfMountainArray.find_peak([1, 2, 1]) === 1
+    assert PeakOfMountainArray.find_peak([1, 2, 3, 2, 1]) === 2
+    assert PeakOfMountainArray.find_peak([1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1]) === 5
+    assert PeakOfMountainArray.find_peak([1, 3, 5, 7, 6, 4, 2]) == 3
+    assert PeakOfMountainArray.find_peak([1, 2, 4, 6, 5, 3]) == 3
   end
 end
