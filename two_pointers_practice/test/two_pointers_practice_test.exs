@@ -1,8 +1,10 @@
 defmodule TwoPointersPracticeTest do
   use ExUnit.Case
-  doctest TwoPointersPractice
+  alias TwoPointersPractice.RemoveDuplicates
 
-  test "greets the world" do
-    assert TwoPointersPractice.hello() == :world
+  test "remove duplicates" do
+    assert RemoveDuplicates.remove_duplicates([]) === []
+    assert RemoveDuplicates.remove_duplicates([1, 1, 2, 2, 2, 3, 4, 4]) === [1, 2, 3, 4]
+    assert RemoveDuplicates.remove_duplicates([0, 0, 0, 0, 1, 2, 2]) === [0, 1, 2]
   end
 end
