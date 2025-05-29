@@ -1,14 +1,17 @@
 defmodule TwoPointersPractice.MiddleOfList do
-
-  def find_middle([head | tail]) do
-    do_find_middle(head, head, tail)
+  def find_middle(list) do
+    do_find_middle(list, list)
   end
 
-  def do_find_middle(slow, _fast, []) do
-    slow
+  defp do_find_middle(slow, []) do
+    hd(slow)
   end
 
-  def do_find_middle(slow, fast, [head | tail]) do
-    0
+  defp do_find_middle(slow, [_]) do
+    hd(slow)
+  end
+
+  defp do_find_middle([_ | slow], [_, _ | fast]) do
+    do_find_middle(slow, fast)
   end
 end
