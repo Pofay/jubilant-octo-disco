@@ -35,10 +35,21 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquareTest do
     assert actual == expected
   end
 
-  test "Should give 2 lines of hashtags ending with a newline" do
-    expected = "#####\n#####\n"
+  test "Should start with 5 and then decrease to 4 hashtag lines if given 2" do
+    expected = "#####\n####\n"
 
     actual = HalfSquare.create_hashtag_lines(2)
+
+    assert actual == expected
+  end
+
+  test "Should create half a square if its given 5 lines" do
+    expected = "#####\n####\n###\n##\n#\n"
+
+    actual = HalfSquare.create_hashtag_lines(5)
+
+
+    IO.puts(expected)
 
     assert actual == expected
   end
