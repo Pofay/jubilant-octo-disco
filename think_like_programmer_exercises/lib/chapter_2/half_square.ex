@@ -10,4 +10,16 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquare do
       acc <> "#"
     end)
   end
+
+  def create_hashtag_lines(0) do
+    ""
+  end
+
+  def create_hashtag_lines(lines) do
+    hashtag_lines = ""
+    Enum.reduce(1..lines, hashtag_lines, fn _i, acc ->
+      new_line = create_hashtags(5)
+      acc <> new_line <> "\n"
+    end)
+  end
 end
