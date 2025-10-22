@@ -11,7 +11,7 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquare do
     end)
   end
 
-  def create_decreasing_hashtag_lines(0) do
+  def create_decreasing_hashtag_lines(lines) when lines <= 0 do
     ""
   end
 
@@ -19,7 +19,7 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquare do
     hashtag_lines = ""
 
     Enum.reduce(1..lines, hashtag_lines, fn i, acc ->
-      new_line = create_hashtags(6 - i)
+      new_line = create_hashtags(lines + 1 - i)
       acc <> new_line <> "\n"
     end)
   end
