@@ -1,5 +1,5 @@
 defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquare do
-  def create_hashtags(0) do
+  def create_hashtags(count) when count <= 0 do
     ""
   end
 
@@ -24,8 +24,7 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquare do
     end)
   end
 
-  @spec create_increasing_hashtag_lines(any()) :: nil | <<>>
-  def create_increasing_hashtag_lines(0) do
+  def create_increasing_hashtag_lines(lines) when lines <= 0 do
     ""
   end
 
