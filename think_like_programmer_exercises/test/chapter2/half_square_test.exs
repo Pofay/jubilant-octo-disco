@@ -30,7 +30,7 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquareTest do
   test "Should give empty string when creating hashtag line of 0" do
     expected = ""
 
-    actual = HalfSquare.create_hashtag_lines(0)
+    actual = HalfSquare.create_decreasing_hashtag_lines(0)
 
     assert actual == expected
   end
@@ -38,7 +38,7 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquareTest do
   test "Should start with 5 and then decrease to 4 hashtag lines if given 2" do
     expected = "#####\n####\n"
 
-    actual = HalfSquare.create_hashtag_lines(2)
+    actual = HalfSquare.create_decreasing_hashtag_lines(2)
 
     assert actual == expected
   end
@@ -46,10 +46,20 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquareTest do
   test "Should create half a square if its given 5 lines" do
     expected = "#####\n####\n###\n##\n#\n"
 
-    actual = HalfSquare.create_hashtag_lines(5)
+    actual = HalfSquare.create_decreasing_hashtag_lines(5)
 
 
-    IO.puts(expected)
+    IO.puts(actual)
+
+    assert actual == expected
+  end
+
+  test "Try a version that creates a increasing half-square" do
+    expected = "#\n##\n###\n####\n#####\n"
+
+    actual = HalfSquare.create_increasing_hashtag_lines(5)
+
+    IO.puts(actual)
 
     assert actual == expected
   end
