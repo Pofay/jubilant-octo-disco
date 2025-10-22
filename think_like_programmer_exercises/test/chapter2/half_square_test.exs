@@ -48,7 +48,6 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.HalfSquareTest do
 
     actual = HalfSquare.create_decreasing_hashtag_lines(5)
 
-
     IO.puts(actual)
 
     assert actual == expected
