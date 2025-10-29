@@ -20,22 +20,13 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.LuhnChecksumValidatorTest do
   end
 
   test "Problem Reduction 1: Sanity Test cases" do
-
     assert LuhnChecksumValidator.multiply_or_sum(6) == 3
     assert LuhnChecksumValidator.multiply_or_sum(8) == 7
     assert LuhnChecksumValidator.multiply_or_sum(9) == 9
   end
 
   test "Problem Reduction 3: Handle luhn checksum length of 6 and verify if its divisible by 10" do
-    expected = true
-
-    actual = LuhnChecksumValidator.validate("174321")
-
-    assert actual == expected
+    assert LuhnChecksumValidator.validate("374322") == true
+    assert LuhnChecksumValidator.validate("174322") == false
   end
-
-  test "Problem Reduction 3: Sanity Test cases" do
-    assert LuhnChecksumValidator.validate("174311") == false
-  end
-
 end

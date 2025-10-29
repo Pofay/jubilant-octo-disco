@@ -13,7 +13,7 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.LuhnChecksumValidator do
       |> Enum.map(&String.to_integer/1)
       |> Enum.reduce({0, 1}, fn digit, {acc, pos} ->
         case pos do
-          pos when rem(pos, 2) == 0 ->
+          pos when rem(pos, 2) != 0 ->
             {acc + multiply_or_sum(digit), pos + 1}
 
           _ ->
