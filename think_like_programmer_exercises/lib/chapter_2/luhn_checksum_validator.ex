@@ -1,4 +1,21 @@
 defmodule ThinkLikeAProgrammerExercises.Chapter2.LuhnChecksumValidator do
+  def run do
+    case IO.gets("Enter a number: ") do
+      "\n" ->
+        IO.puts("No input (EOF).")
+        :error
+
+      line ->
+        valid_checksum =
+          line
+          |> String.trim()
+          |> validate()
+
+        IO.puts("Is Checksum valid?: #{valid_checksum}")
+        :ok
+    end
+  end
+
   def multiply_or_sum(digit) when digit * 2 < 10 do
     digit * 2
   end
