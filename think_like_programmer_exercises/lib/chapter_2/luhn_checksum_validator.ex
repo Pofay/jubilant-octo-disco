@@ -8,12 +8,44 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.LuhnChecksumValidator do
   end
 
   def validate(value) do
+    if even_length?(value) do
+      validate_even(value)
+    else
+      validate_odd(value)
+    end
+  end
+
+  defp even_length?(value) do
+    String.split(value, "", trim: true)
+    |> length()
+    |> rem(2) == 0
+  end
+
+  defp validate_even(value) do
     total =
       String.split(value, "", trim: true)
       |> Enum.map(&String.to_integer/1)
       |> Enum.reduce({0, 1}, fn digit, {acc, pos} ->
         case pos do
           pos when rem(pos, 2) != 0 ->
+            {acc + multiply_or_sum(digit), pos + 1}
+
+          _ ->
+            {acc + digit, pos + 1}
+        end
+      end)
+      |> elem(0)
+
+    rem(total, 10) == 0
+  end
+
+  defp validate_odd(value) do
+    total =
+      String.split(value, "", trim: true)
+      |> Enum.map(&String.to_integer/1)
+      |> Enum.reduce({0, 1}, fn digit, {acc, pos} ->
+        case pos do
+          pos when rem(pos, 2) == 0 ->
             {acc + multiply_or_sum(digit), pos + 1}
 
           _ ->

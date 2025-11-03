@@ -25,8 +25,12 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.LuhnChecksumValidatorTest do
     assert LuhnChecksumValidator.multiply_or_sum(9) == 9
   end
 
-  test "Problem Reduction 3: Handle luhn checksum length of 6 and verify if its divisible by 10" do
+  test "Problem Reduction 3: Handle even length checksums" do
     assert LuhnChecksumValidator.validate("374322") == true
     assert LuhnChecksumValidator.validate("174322") == false
+  end
+
+  test "Problem Reduction 3.5: Handle odd length checksums" do
+    assert LuhnChecksumValidator.validate("67892") == true
   end
 end
