@@ -1,29 +1,29 @@
 defmodule ThinkLikeAProgrammerExercises.Chapter2.LuhnChecksumValidator do
-  def multiply_or_sum(value) when value * 2 < 10 do
-    value * 2
+  def multiply_or_sum(digit) when digit * 2 < 10 do
+    digit * 2
   end
 
-  def multiply_or_sum(value) when value * 2 >= 10 do
-    1 + rem(value * 2, 10)
+  def multiply_or_sum(digit) when digit * 2 >= 10 do
+    1 + rem(digit * 2, 10)
   end
 
-  def validate(value) do
-    if even_length?(value) do
-      validate_even(value)
+  def validate(checksum) do
+    if even_length?(checksum) do
+      validate_even(checksum)
     else
-      validate_odd(value)
+      validate_odd(checksum)
     end
   end
 
-  defp even_length?(value) do
-    String.split(value, "", trim: true)
+  defp even_length?(checksum) do
+    String.split(checksum, "", trim: true)
     |> length()
     |> rem(2) == 0
   end
 
-  defp validate_even(value) do
+  defp validate_even(checksum) do
     total =
-      String.split(value, "", trim: true)
+      String.split(checksum, "", trim: true)
       |> Enum.map(&String.to_integer/1)
       |> Enum.reduce({0, 1}, fn digit, {acc, pos} ->
         case pos do
@@ -39,9 +39,9 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.LuhnChecksumValidator do
     rem(total, 10) == 0
   end
 
-  defp validate_odd(value) do
+  defp validate_odd(checksum) do
     total =
-      String.split(value, "", trim: true)
+      String.split(checksum, "", trim: true)
       |> Enum.map(&String.to_integer/1)
       |> Enum.reduce({0, 1}, fn digit, {acc, pos} ->
         case pos do
