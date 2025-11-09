@@ -1,4 +1,25 @@
 defmodule ThinkLikeAProgrammerExercises.Chapter2.MessageDecoder do
+  # Slightly different as I don't need a escape character to stop receiving input
+  # The book needs to have -1 entered at the last to decode the input message and
+  # end the program.
+  def run() do
+    case IO.gets("Enter numbers: ") do
+      "\n" ->
+        IO.puts("No input (EOF).")
+        :error
+
+      encoded_message ->
+        decoded_message =
+          encoded_message
+          |> String.trim()
+          |> decode_message()
+
+        IO.puts("Encoded message: #{encoded_message}")
+        IO.puts("Decoded message: #{decoded_message}")
+        :ok
+    end
+  end
+
   def decode_message(encoded_message) do
     encoded_message
     |> String.split([",", " "], trim: true)
