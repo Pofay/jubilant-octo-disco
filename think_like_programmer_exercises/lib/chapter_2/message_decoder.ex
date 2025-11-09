@@ -1,6 +1,6 @@
 defmodule ThinkLikeAProgrammerExercises.Chapter2.MessageDecoder do
-  def decode_message(numeric_message) do
-    numeric_message
+  def decode_message(encoded_message) do
+    encoded_message
     |> String.split([",", " "], trim: true)
     |> Enum.reduce({[], "U"}, fn encoded_value, {decoded_message, decode_mode} ->
       decoded_value =
