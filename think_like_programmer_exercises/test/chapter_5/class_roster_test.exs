@@ -52,5 +52,52 @@ defmodule ThinkLikeAProgrammerExercises.Chapter5.ClassRosterTest do
     assert actual == expected
   end
 
+  test "Remove Record" do
+    roster = [
+      %Student{id: 5, name: "Pofire", grade: 89, grade_letter: "B+"},
+      %Student{id: 6, name: "Sprakak", grade: 81, grade_letter: "B-"}
+    ]
 
+    expected = [%Student{id: 6, name: "Sprakak", grade: 81, grade_letter: "B-"}]
+
+    actual = ClassRoster.remove_record(5, roster)
+
+    assert actual == expected
+  end
+
+  test "Get Record" do
+    roster = [
+      %Student{id: 2, name: "Milady", grade: 92, grade_letter: "A-"},
+      %Student{id: 8, name: "Milord", grade: 85, grade_letter: "B"}
+    ]
+
+    expected = {:ok, %Student{id: 2, name: "Milady", grade: 92, grade_letter: "A-"}}
+
+    actual = ClassRoster.get_record(2, roster)
+
+    assert actual == expected
+  end
+
+  test "Get record should return :error if record not found" do
+    roster = [
+      %Student{id: 4, name: "Jian", grade: 92, grade_letter: "A-"},
+      %Student{id: 7, name: "Jianna", grade: 93, grade_letter: "A"}
+    ]
+
+    expected = {:error, "record does not exist."}
+
+    actual = ClassRoster.get_record(2, roster)
+
+    assert actual == expected
+  end
+
+  test "Get record with empty list returns error with empty roster message" do
+    roster = []
+
+    expected = {:error, "roster is empty."}
+
+    actual = ClassRoster.get_record(2, roster)
+
+    assert actual == expected
+  end
 end
