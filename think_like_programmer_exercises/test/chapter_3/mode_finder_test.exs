@@ -46,9 +46,9 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.ModeFinderTest do
   test "Actual Solution: Get mode and frequency" do
     survey_data = [7, 7, 7, 2, 3, 2, 10, 5, 6, 6, 7]
 
-    expected = {4, 7}
+    expected = %{frequency: 4, mode: 7}
 
-    actual = ModeFinder.find_mode(survey_data)
+    actual = ModeFinder.get_frequency_and_mode(survey_data)
 
     assert actual == expected
   end

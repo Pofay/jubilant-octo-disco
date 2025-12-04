@@ -13,5 +13,6 @@ defmodule ThinkLikeAProgrammerExercises.Chapter3.ModeFinder do
     end)
     |> Enum.with_index(1)
     |> Enum.max_by(fn {frequency, _possible_mode} -> frequency end)
+    |> (fn {frequency, mode} -> %{frequency: frequency, mode: mode} end).()
   end
 end
