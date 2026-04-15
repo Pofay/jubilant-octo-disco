@@ -31,7 +31,8 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.MessageDecoderTest do
   test "Problem Reduction: Deal with Punctuation Mode" do
     expected = "!' "
 
-    actual = Enum.map(["37", "53", "50"], &MessageDecoder.decode_to_punctuation/1) |> List.to_string()
+    actual =
+      Enum.map(["37", "53", "50"], &MessageDecoder.decode_to_punctuation/1) |> List.to_string()
 
     assert actual == expected
   end
@@ -47,7 +48,21 @@ defmodule ThinkLikeAProgrammerExercises.Chapter2.MessageDecoderTest do
   test "From the Book" do
     expected = "Right? Yes!"
 
-    actual = MessageDecoder.decode_message("18,12312,171,763,98423,1208,216,11,500,18,241,0,32,20620,27,10")
+    actual =
+      MessageDecoder.decode_message(
+        "18,12312,171,763,98423,1208,216,11,500,18,241,0,32,20620,27,10"
+      )
+
+    assert actual == expected
+  end
+
+  test "From the Book: BitString comparison" do
+    expected = <<82, 105, 103, 104, 116, 63, 32, 89, 101, 115, 33>>
+
+    actual =
+      MessageDecoder.decode_message(
+        "18,12312,171,763,98423,1208,216,11,500,18,241,0,32,20620,27,10"
+      )
 
     assert actual == expected
   end

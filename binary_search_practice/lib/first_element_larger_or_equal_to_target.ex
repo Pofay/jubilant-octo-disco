@@ -18,7 +18,7 @@ defmodule BinarySearchPractice.FirstElementLargerOrEqualToTarget do
   defp do_binary_search(left, right, boundary_index, feasible_function, list, target) do
     # Use div to make sure its gonna return an integer
     # left + (right - left) / 2 -> will return a floating point
-    # which causes Enum.at/3 to fail due to its when is_integer(index) guard
+    # which causes Enum.at/3 to fail due to the is_integer(index) guard
     mid = left + div((right - left), 2)
 
     cond do
